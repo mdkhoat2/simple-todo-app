@@ -1,20 +1,16 @@
 package com.example.todo.todo;
 
-import jakarta.validation.constraints.NotBlank;
-
-public class CreateTodoRequest {
-    @NotBlank
+/**
+ * DTO for partial updates to a Todo.
+ * All fields are optional; the service will apply only present values.
+ */
+public class UpdateTodoRequest {
     private String title;
+    private Boolean completed;
+    private String dueDate; // ISO-8601
+    private String priority;
 
-    // optional fields supported by frontend
-    private String dueDate; // ISO-8601 string, optional
-    private String priority; // e.g. "low" | "medium" | "high"
-
-    public CreateTodoRequest() {}
-
-    public CreateTodoRequest(String title) {
-        this.title = title;
-    }
+    public UpdateTodoRequest() {}
 
     public String getTitle() {
         return title;
@@ -22,6 +18,14 @@ public class CreateTodoRequest {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Boolean getCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
     }
 
     public String getDueDate() {
