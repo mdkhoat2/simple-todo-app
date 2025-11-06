@@ -65,6 +65,12 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <!-- Limit instrumentation to our application's packages to avoid JDK 24 classes -->
+                            <includes>
+                                <include>com.example.*</include>
+                            </includes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>

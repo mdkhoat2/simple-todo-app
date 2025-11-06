@@ -36,16 +36,29 @@ class TodoControllerTest {
 
     @Test
     void listReturnsTodos() throws Exception {
-    service.setList(List.of(
-        new Todo(1, "Write tests", false, null),
-        new Todo(2, "Wire CI", true, null)
-    ));
+        service.setList(List.of(
+                new Todo(1, "Write tests", false, null),
+                new Todo(2, "Wire CI", true, null)
+        ));
 
         mockMvc.perform(get("/api/todos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].title", is("Write tests")))
                 .andExpect(jsonPath("$[1].completed", is(true)));
+    }
+
+    @Test
+    void headerPrecedenceUsesXUserNameOverOthers() throws Exception {
+        service.setList(List.of());
+        mockMvc.perform(get("/api/todos")
+                        .header("X-User-Name", "alice")
+                        .header("X-User-Id", "ignored")
+                        .queryParam("userName", "bob")
+                        .queryParam("userId", "charlie"))
+                .andExpect(status().isOk());
+        // X-User-Name should win
+        org.junit.jupiter.api.Assertions.assertEquals("alice", service.lastUid);
     }
 
     @Test
@@ -59,16 +72,19 @@ class TodoControllerTest {
 
     @Test
     void createReturnsCreatedWithBody() throws Exception {
-    service.setAddReturn(new Todo(10, "New task", false, null));
-    CreateTodoRequest req = new CreateTodoRequest("New task");
+        service.setAddReturn(new Todo(10, "New task", false, null));
+        CreateTodoRequest req = new CreateTodoRequest("New task");
 
         mockMvc.perform(post("/api/todos")
+                        .header("X-User-Id", "u-123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/todos/10"))
                 .andExpect(jsonPath("$.id", is(10)))
                 .andExpect(jsonPath("$.title", is("New task")));
+        // falls back to X-User-Id when name is absent
+        org.junit.jupiter.api.Assertions.assertEquals("u-123", service.lastUid);
     }
 
     @Test
@@ -80,9 +96,10 @@ class TodoControllerTest {
 
     // Simple fake without Mockito/Byte Buddy to be Java 24 friendly
     static class FakeService extends TodoService {
-        private List<Todo> list = new ArrayList<>();
+    private List<Todo> list = new ArrayList<>();
         private Todo addReturn;
         private boolean throwOnToggle;
+    String lastUid;
 
         public FakeService() { super(new TodoRepository()); }
 
@@ -96,7 +113,7 @@ class TodoControllerTest {
 
         // New per-user signature used by controller
         @Override
-        public List<Todo> list(String userName) { return List.copyOf(list); }
+    public List<Todo> list(String userName) { this.lastUid = userName; return List.copyOf(list); }
 
         @Override
         public Todo add(String title) { return addReturn != null ? addReturn : new Todo(999, title, false, null); }
@@ -105,7 +122,7 @@ class TodoControllerTest {
         public Todo add(CreateTodoRequest req) { return addReturn != null ? addReturn : new Todo(999, req.getTitle(), false, null); }
 
         @Override
-        public Todo add(String userName, CreateTodoRequest req) { return addReturn != null ? addReturn : new Todo(999, req.getTitle(), false, null); }
+    public Todo add(String userName, CreateTodoRequest req) { this.lastUid = userName; return addReturn != null ? addReturn : new Todo(999, req.getTitle(), false, null); }
 
         @Override
         public Todo toggle(long id) {
@@ -115,6 +132,7 @@ class TodoControllerTest {
 
         @Override
         public Todo toggle(String userName, long id) {
+            this.lastUid = userName;
             if (throwOnToggle) throw new TodoNotFoundException(id);
             return new Todo(id, "t", true, null);
         }
