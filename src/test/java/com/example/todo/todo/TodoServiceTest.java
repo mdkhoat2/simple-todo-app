@@ -13,7 +13,7 @@ class TodoServiceTest {
 
     @BeforeEach
     void setup() {
-        repository = new TodoRepository();
+        repository = new TodoRepository(new InMemoryTodoJpaRepository());
         repository.clear();
         service = new TodoService(repository);
     }

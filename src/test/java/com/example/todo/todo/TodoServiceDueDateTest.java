@@ -13,7 +13,7 @@ class TodoServiceDueDateTest {
 
     @BeforeEach
     void setup() {
-        repository = new TodoRepository();
+        repository = new TodoRepository(new InMemoryTodoJpaRepository());
         service = new TodoService(repository);
     }
 

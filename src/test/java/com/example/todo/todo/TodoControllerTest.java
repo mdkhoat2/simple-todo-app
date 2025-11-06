@@ -101,7 +101,7 @@ class TodoControllerTest {
         private boolean throwOnToggle;
     String lastUid;
 
-        public FakeService() { super(new TodoRepository()); }
+        public FakeService() { super(new TodoRepository(new InMemoryTodoJpaRepository())); }
 
         void setList(List<Todo> l) { this.list = new ArrayList<>(l); }
         void setAddReturn(Todo t) { this.addReturn = t; }

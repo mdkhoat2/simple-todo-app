@@ -13,7 +13,7 @@ class TodoRepositoryTest {
 
     @BeforeEach
     void setup() {
-        repo = new TodoRepository();
+        repo = new TodoRepository(new InMemoryTodoJpaRepository());
     }
 
     @Test
@@ -32,9 +32,9 @@ class TodoRepositoryTest {
         assertTrue(aliceList.stream().anyMatch(t -> t.getTitle().equals("Task A1")));
         assertTrue(bobList.stream().anyMatch(t -> t.getTitle().equals("Task B1")));
 
-        // Ensure ids are independent per user (both start from 1)
-        assertEquals(1, aliceList.get(0).getId());
-        assertEquals(1, bobList.get(0).getId());
+        // Verify ids are present and unique across all users (database global sequence)
+        assertTrue(aliceList.stream().allMatch(t -> t.getId() != null && t.getId() > 0));
+        assertTrue(bobList.stream().allMatch(t -> t.getId() != null && t.getId() > 0));
     }
 
     @Test

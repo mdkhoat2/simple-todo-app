@@ -1,34 +1,62 @@
 package com.example.todo.todo;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 
 /**
- * Todo model exposed by the API. Kept immutable for thread-safety in the in-memory
- * repository. Added optional dueDate and priority fields to match frontend shape.
+ * Todo JPA entity persisted to PostgreSQL.
+ * Immutable API via builder pattern; mutable for JPA hydration.
  */
-
+@Entity
+@Table(name = "todos", indexes = {
+    @Index(name = "idx_user_id", columnList = "user_id")
+})
 public class Todo {
-    private final long id;
-    private final String title;
-    private final boolean completed;
-    private final Instant createdAt;
-    private final Instant dueDate;
-    private final String priority;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Todo(long id, String title, boolean completed, Instant createdAt) {
-        this(id, title, completed, createdAt, null, null);
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private boolean completed;
+
+    @Column(nullable = false)
+    private Instant createdAt;
+
+    @Column(nullable = true)
+    private Instant dueDate;
+
+    @Column(nullable = true)
+    private String priority;
+
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    // Required by JPA
+    public Todo() {
+        this.createdAt = Instant.now();
+        this.completed = false;
+        this.userId = "default";
     }
 
-    public Todo(long id, String title, boolean completed, Instant createdAt, Instant dueDate, String priority) {
+    public Todo(Long id, String title, boolean completed, Instant createdAt, Instant dueDate, String priority, String userId) {
         this.id = id;
         this.title = title;
         this.completed = completed;
         this.createdAt = createdAt == null ? Instant.now() : createdAt;
         this.dueDate = dueDate;
         this.priority = priority;
+        this.userId = userId == null ? "default" : userId;
     }
 
-    public long getId() {
+    // Legacy constructor for backward compatibility
+    public Todo(long id, String title, boolean completed, Instant createdAt) {
+        this(id, title, completed, createdAt, null, null, "default");
+    }
+
+    public Long getId() {
         return id;
     }
 
@@ -52,23 +80,27 @@ public class Todo {
         return priority;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     public Todo toggle() {
-        return new Todo(this.id, this.title, !this.completed, this.createdAt, this.dueDate, this.priority);
+        return new Todo(this.id, this.title, !this.completed, this.createdAt, this.dueDate, this.priority, this.userId);
     }
 
     public Todo withTitle(String newTitle) {
-        return new Todo(this.id, newTitle, this.completed, this.createdAt, this.dueDate, this.priority);
+        return new Todo(this.id, newTitle, this.completed, this.createdAt, this.dueDate, this.priority, this.userId);
     }
 
     public Todo withCompleted(boolean completed) {
-        return new Todo(this.id, this.title, completed, this.createdAt, this.dueDate, this.priority);
+        return new Todo(this.id, this.title, completed, this.createdAt, this.dueDate, this.priority, this.userId);
     }
 
     public Todo withDueDate(Instant dueDate) {
-        return new Todo(this.id, this.title, this.completed, this.createdAt, dueDate, this.priority);
+        return new Todo(this.id, this.title, this.completed, this.createdAt, dueDate, this.priority, this.userId);
     }
 
     public Todo withPriority(String priority) {
-        return new Todo(this.id, this.title, this.completed, this.createdAt, this.dueDate, priority);
+        return new Todo(this.id, this.title, this.completed, this.createdAt, this.dueDate, priority, this.userId);
     }
 }
