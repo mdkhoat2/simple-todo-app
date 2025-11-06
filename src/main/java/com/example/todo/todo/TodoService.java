@@ -71,7 +71,7 @@ public class TodoService {
 
         String newPriority = req.getPriority() != null ? req.getPriority() : existing.getPriority();
 
-        Todo updated = new Todo(existing.getId(), newTitle, newCompleted, existing.getCreatedAt(), newDue, newPriority);
+        Todo updated = new Todo(existing.getId(), newTitle, newCompleted, existing.getCreatedAt(), newDue, newPriority, existing.getUserId());
         return repository.updateForUser(userName, updated).orElseThrow(() -> new TodoNotFoundException(id));
     }
 

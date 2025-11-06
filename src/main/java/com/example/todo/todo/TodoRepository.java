@@ -1,33 +1,23 @@
 package com.example.todo.todo;
 
 import org.springframework.stereotype.Repository;
-
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * TodoRepository bridges business logic with JPA persistence.
+ * Per-user scoping is maintained; default user is used for backward compatibility.
+ */
 @Repository
 public class TodoRepository {
-    // Per-user in-memory stores. Key is userId string (can be generated UUID or any identifier).
-    // For backward compatibility, an operation without a userId will use the DEFAULT_USER key.
     private static final String DEFAULT_USER = "__default__";
 
-    private static class UserStore {
-        final ConcurrentMap<Long, Todo> todos = new ConcurrentHashMap<>();
-        final AtomicLong seq = new AtomicLong(0);
-    }
+    private final TodoJpaRepository jpaRepository;
 
-    private final ConcurrentMap<String, UserStore> users = new ConcurrentHashMap<>();
-
-    private UserStore getOrCreate(String userId) {
-        String key = userId == null ? DEFAULT_USER : userId;
-        return users.computeIfAbsent(key, k -> new UserStore());
+    public TodoRepository(TodoJpaRepository jpaRepository) {
+        this.jpaRepository = jpaRepository;
     }
 
     // Backwards-compatible operations (no user) -> default user
@@ -60,47 +50,55 @@ public class TodoRepository {
     }
 
     public void clear() {
-        UserStore s = users.get(DEFAULT_USER);
-        if (s != null) {
-            s.todos.clear();
-            s.seq.set(0);
-        }
+        List<Todo> defaults = jpaRepository.findByUserId(DEFAULT_USER);
+        jpaRepository.deleteAll(defaults);
     }
 
     // Per-user API
     public Todo saveForUser(String userId, String title, Instant dueDate, String priority) {
-        UserStore s = getOrCreate(userId);
-        long id = s.seq.incrementAndGet();
-        Todo todo = new Todo(id, title, false, Instant.now(), dueDate, priority);
-        s.todos.put(id, todo);
-        return todo;
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Todo todo = new Todo(null, title, false, Instant.now(), dueDate, priority, uid);
+        return jpaRepository.save(todo);
     }
 
     public List<Todo> findAllForUser(String userId) {
-        UserStore s = getOrCreate(userId);
-        Collection<Todo> values = s.todos.values();
-        List<Todo> list = new ArrayList<>(values);
+        String uid = userId == null ? DEFAULT_USER : userId;
+        List<Todo> list = new ArrayList<>(jpaRepository.findByUserId(uid));
         list.sort((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
-        return Collections.unmodifiableList(list);
+        return list;
     }
 
     public Optional<Todo> findByIdForUser(String userId, long id) {
-        UserStore s = getOrCreate(userId);
-        return Optional.ofNullable(s.todos.get(id));
+        String uid = userId == null ? DEFAULT_USER : userId;
+        return jpaRepository.findByIdAndUserId(id, uid);
     }
 
     public Optional<Todo> toggleForUser(String userId, long id) {
-        UserStore s = getOrCreate(userId);
-        return Optional.ofNullable(s.todos.computeIfPresent(id, (k, v) -> v.toggle()));
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Optional<Todo> opt = jpaRepository.findByIdAndUserId(id, uid);
+        if (opt.isPresent()) {
+            Todo toggled = opt.get().toggle();
+            return Optional.of(jpaRepository.save(toggled));
+        }
+        return Optional.empty();
     }
 
     public Optional<Todo> updateForUser(String userId, Todo todo) {
-        UserStore s = getOrCreate(userId);
-        return Optional.ofNullable(s.todos.computeIfPresent(todo.getId(), (k, v) -> todo));
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Optional<Todo> existing = jpaRepository.findByIdAndUserId(todo.getId(), uid);
+        if (existing.isPresent()) {
+            return Optional.of(jpaRepository.save(todo));
+        }
+        return Optional.empty();
     }
 
     public boolean deleteForUser(String userId, long id) {
-        UserStore s = getOrCreate(userId);
-        return s.todos.remove(id) != null;
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Optional<Todo> existing = jpaRepository.findByIdAndUserId(id, uid);
+        if (existing.isPresent()) {
+            jpaRepository.delete(existing.get());
+            return true;
+        }
+        return false;
     }
 }
