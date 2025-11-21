@@ -9,6 +9,8 @@ public class UpdateTodoRequest {
     private Boolean completed;
     private String dueDate; // ISO-8601
     private String priority;
+    @io.swagger.v3.oas.annotations.media.Schema(description = "Optional tags for this todo")
+    private java.util.List<String> tags;
 
     public UpdateTodoRequest() {}
 
@@ -42,5 +44,13 @@ public class UpdateTodoRequest {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public java.util.List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(java.util.List<String> tags) {
+        this.tags = tags;
     }
 }

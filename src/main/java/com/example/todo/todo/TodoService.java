@@ -21,6 +21,17 @@ public class TodoService {
         return repository.findAllForUser(userName);
     }
 
+    public List<Todo> list(String userName, String tag) {
+        List<Todo> all = list(userName);
+        if (tag == null || tag.isBlank()) return all;
+        java.util.List<Todo> filtered = new java.util.ArrayList<>();
+        for (Todo t : all) {
+            java.util.List<String> tags = t.getTags();
+            if (tags != null && tags.contains(tag)) filtered.add(t);
+        }
+        return filtered;
+    }
+
     // Backwards-compatible list()
     public List<Todo> list() {
         return list(null);
@@ -40,7 +51,7 @@ public class TodoService {
         }
         Instant due = parseDueDate(req.getDueDate());
         String priority = req.getPriority();
-        return repository.save(title.trim(), due, priority);
+        return repository.save(title.trim(), due, priority, req.getTags());
     }
     // Add for specific user (if userName is null default store is used)
     public Todo add(String userName, CreateTodoRequest req) {
@@ -50,11 +61,19 @@ public class TodoService {
         }
         Instant due = parseDueDate(req.getDueDate());
         String priority = req.getPriority();
-        return repository.saveForUser(userName, title.trim(), due, priority);
+        return repository.saveForUser(userName, title.trim(), due, priority, req.getTags());
     }
 
     public Todo toggle(String userName, long id) {
         return repository.toggleForUser(userName, id).orElseThrow(() -> new TodoNotFoundException(id));
+    }
+
+    public Todo addTag(String userName, long id, String tag) {
+        return repository.addTagForUser(userName, id, tag).orElseThrow(() -> new TodoNotFoundException(id));
+    }
+
+    public Todo removeTag(String userName, long id, String tag) {
+        return repository.removeTagForUser(userName, id, tag).orElseThrow(() -> new TodoNotFoundException(id));
     }
 
     public Todo update(String userName, long id, UpdateTodoRequest req) {
@@ -71,7 +90,9 @@ public class TodoService {
 
         String newPriority = req.getPriority() != null ? req.getPriority() : existing.getPriority();
 
-        Todo updated = new Todo(existing.getId(), newTitle, newCompleted, existing.getCreatedAt(), newDue, newPriority, existing.getUserId());
+        java.util.List<String> newTags = req.getTags() != null ? req.getTags() : existing.getTags();
+
+        Todo updated = new Todo(existing.getId(), newTitle, newCompleted, existing.getCreatedAt(), newDue, newPriority, existing.getUserId(), newTags);
         return repository.updateForUser(userName, updated).orElseThrow(() -> new TodoNotFoundException(id));
     }
 

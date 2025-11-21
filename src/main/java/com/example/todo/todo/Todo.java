@@ -2,6 +2,10 @@ package com.example.todo.todo;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.List;
+
+import jakarta.persistence.Convert;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Todo JPA entity persisted to PostgreSQL.
@@ -34,6 +38,10 @@ public class Todo {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "tags", columnDefinition = "text", nullable = true)
+    @Convert(converter = StringListConverter.class)
+    @Schema(description = "Tags associated with this todo")
+    private List<String> tags;
     // Required by JPA
     public Todo() {
         this.createdAt = Instant.now();
@@ -42,6 +50,10 @@ public class Todo {
     }
 
     public Todo(Long id, String title, boolean completed, Instant createdAt, Instant dueDate, String priority, String userId) {
+        this(id, title, completed, createdAt, dueDate, priority, userId, null);
+    }
+
+    public Todo(Long id, String title, boolean completed, Instant createdAt, Instant dueDate, String priority, String userId, List<String> tags) {
         this.id = id;
         this.title = title;
         this.completed = completed;
@@ -49,11 +61,12 @@ public class Todo {
         this.dueDate = dueDate;
         this.priority = priority;
         this.userId = userId == null ? "default" : userId;
+        this.tags = tags;
     }
 
     // Legacy constructor for backward compatibility
     public Todo(long id, String title, boolean completed, Instant createdAt) {
-        this(id, title, completed, createdAt, null, null, "default");
+        this(id, title, completed, createdAt, null, null, "default", null);
     }
 
     public Long getId() {
@@ -84,23 +97,31 @@ public class Todo {
         return userId;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
     public Todo toggle() {
-        return new Todo(this.id, this.title, !this.completed, this.createdAt, this.dueDate, this.priority, this.userId);
+        return new Todo(this.id, this.title, !this.completed, this.createdAt, this.dueDate, this.priority, this.userId, this.tags);
     }
 
     public Todo withTitle(String newTitle) {
-        return new Todo(this.id, newTitle, this.completed, this.createdAt, this.dueDate, this.priority, this.userId);
+        return new Todo(this.id, newTitle, this.completed, this.createdAt, this.dueDate, this.priority, this.userId, this.tags);
     }
 
     public Todo withCompleted(boolean completed) {
-        return new Todo(this.id, this.title, completed, this.createdAt, this.dueDate, this.priority, this.userId);
+        return new Todo(this.id, this.title, completed, this.createdAt, this.dueDate, this.priority, this.userId, this.tags);
     }
 
     public Todo withDueDate(Instant dueDate) {
-        return new Todo(this.id, this.title, this.completed, this.createdAt, dueDate, this.priority, this.userId);
+        return new Todo(this.id, this.title, this.completed, this.createdAt, dueDate, this.priority, this.userId, this.tags);
     }
 
     public Todo withPriority(String priority) {
-        return new Todo(this.id, this.title, this.completed, this.createdAt, this.dueDate, priority, this.userId);
+        return new Todo(this.id, this.title, this.completed, this.createdAt, this.dueDate, priority, this.userId, this.tags);
+    }
+
+    public Todo withTags(java.util.List<String> tags) {
+        return new Todo(this.id, this.title, this.completed, this.createdAt, this.dueDate, this.priority, this.userId, tags);
     }
 }
