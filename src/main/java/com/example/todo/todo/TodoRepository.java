@@ -22,11 +22,15 @@ public class TodoRepository {
 
     // Backwards-compatible operations (no user) -> default user
     public Todo save(String title) {
-        return saveForUser(null, title, null, null);
+        return saveForUser(null, title, null, null, null);
     }
 
     public Todo save(String title, Instant dueDate, String priority) {
-        return saveForUser(null, title, dueDate, priority);
+        return saveForUser(null, title, dueDate, priority, null);
+    }
+
+    public Todo save(String title, Instant dueDate, String priority, java.util.List<String> tags) {
+        return saveForUser(null, title, dueDate, priority, tags);
     }
 
     public List<Todo> findAll() {
@@ -55,10 +59,14 @@ public class TodoRepository {
     }
 
     // Per-user API
-    public Todo saveForUser(String userId, String title, Instant dueDate, String priority) {
+    public Todo saveForUser(String userId, String title, Instant dueDate, String priority, java.util.List<String> tags) {
         String uid = userId == null ? DEFAULT_USER : userId;
-        Todo todo = new Todo(null, title, false, Instant.now(), dueDate, priority, uid);
+        Todo todo = new Todo(null, title, false, Instant.now(), dueDate, priority, uid, tags);
         return jpaRepository.save(todo);
+    }
+
+    public Todo saveForUser(String userId, String title, Instant dueDate, String priority) {
+        return saveForUser(userId, title, dueDate, priority, null);
     }
 
     public List<Todo> findAllForUser(String userId) {
@@ -88,6 +96,35 @@ public class TodoRepository {
         Optional<Todo> existing = jpaRepository.findByIdAndUserId(todo.getId(), uid);
         if (existing.isPresent()) {
             return Optional.of(jpaRepository.save(todo));
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Todo> addTagForUser(String userId, long id, String tag) {
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Optional<Todo> existing = jpaRepository.findByIdAndUserId(id, uid);
+        if (existing.isPresent()) {
+            Todo t = existing.get();
+            java.util.List<String> tags = t.getTags();
+            if (tags == null) tags = new java.util.ArrayList<>();
+            if (!tags.contains(tag)) tags.add(tag);
+            Todo updated = t.withTags(tags);
+            return Optional.of(jpaRepository.save(updated));
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Todo> removeTagForUser(String userId, long id, String tag) {
+        String uid = userId == null ? DEFAULT_USER : userId;
+        Optional<Todo> existing = jpaRepository.findByIdAndUserId(id, uid);
+        if (existing.isPresent()) {
+            Todo t = existing.get();
+            java.util.List<String> tags = t.getTags();
+            if (tags == null || !tags.contains(tag)) return Optional.of(t);
+            java.util.List<String> newTags = new java.util.ArrayList<>(tags);
+            newTags.remove(tag);
+            Todo updated = t.withTags(newTags);
+            return Optional.of(jpaRepository.save(updated));
         }
         return Optional.empty();
     }

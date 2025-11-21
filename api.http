@@ -1,0 +1,40 @@
+### Set base URL
+@baseUrl = http://localhost:8080
+
+### Create a todo with tags
+POST {{baseUrl}}/api/todos
+Content-Type: application/json
+
+{
+  "title": "Buy groceries",
+  "dueDate": "2025-12-01",
+  "priority": "medium",
+  "tags": ["shopping","errand"]
+}
+
+### List all todos
+GET {{baseUrl}}/api/todos
+
+### List todos filtered by tag
+GET {{baseUrl}}/api/todos?tag=shopping
+
+### Add a single tag to a todo (replace {id})
+POST {{baseUrl}}/api/todos/5/tags?tag=home
+
+### Remove a single tag from a todo (replace {id})
+DELETE {{baseUrl}}/api/todos/5/tags?tag=errand
+
+### Update a todo (set title and tags)
+PUT {{baseUrl}}/api/todos/5
+Content-Type: application/json
+
+{
+  "title": "Buy milk and eggs",
+  "tags": ["shopping","urgent"]
+}
+
+### Toggle a todo
+PUT {{baseUrl}}/api/todos/5/toggle
+
+### Delete a todo
+DELETE {{baseUrl}}/api/todos/5
