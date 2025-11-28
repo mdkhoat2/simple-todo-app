@@ -12,10 +12,16 @@ A tiny but functional Spring Boot REST API designed for Software Testing demos: 
 
 ## Run locally
 
+- Start the database:
+
+```powershell
+docker run --name todo-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -p 5432:5432 -d postgres:16
+```
+
 - Start the app:
 
 ```powershell
-mvn spring-boot:run
+mvn "-Dspring-boot.run.jvmArguments=-Duser.timezone=Asia/Ho_Chi_Minh" spring-boot:run
 ```
 
 - API endpoints (port 8080):
