@@ -43,3 +43,11 @@ jobs:
         with:
           name: surefire-reports
           path: target/surefire-reports
+      
+      - name: Sonar scan
+        run: mvn -B verify sonar:sonar \
+            -Dsonar.projectKey=mdkhoat2_simple-todo-app \
+            -Dsonar.organization=mdkhoat2 \
+            -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
