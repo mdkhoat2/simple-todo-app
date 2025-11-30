@@ -20,6 +20,19 @@ public class TodoService {
 
     public boolean authenticate(String username, String password) {
         logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
+        logger.info("Authenticating user {} with password {}", username, password);
         return ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password);
     }
 
