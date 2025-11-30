@@ -12,6 +12,8 @@ import java.util.List;
 public class TodoService {
     private final TodoRepository repository;
 
+    private static final String HARDCODED_PASSWORD = "supersecretpassword";
+
     public TodoService(TodoRepository repository) {
         this.repository = repository;
     }
@@ -134,5 +136,9 @@ public class TodoService {
 
     public void delete(long id) {
         delete(null, id);
+    }
+
+    public boolean authenticate(String password) {
+        return HARDCODED_PASSWORD.equals(password);
     }
 }
