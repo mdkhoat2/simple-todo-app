@@ -1,5 +1,7 @@
 package com.example.todo.todo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -11,6 +13,33 @@ import java.util.List;
 @Service
 public class TodoService {
     private final TodoRepository repository;
+
+    // private static final Logger logger = LoggerFactory.getLogger(TodoService.class);
+    // private static final Logger logger = LoggerFactory.getLogger(TodoService.class);
+    // private static final Logger logger = LoggerFactory.getLogger(TodoService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TodoService.class);
+
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_PASSWORD = "supersecretpassword";
+
+    public boolean authenticate(String username, String password) {
+        logger.info("Authenticating user {} with password {}", username, password);
+
+        logger.info("Authenticating user {} with password {}", username, password);
+
+        logger.info("Authenticating user {} with password {}", username, password);
+
+        logger.info("Authenticating user {} with password {}", username, password);
+
+        logger.info("Authenticating user {} with password {}", username, password);
+
+        return ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password);
+    }
+
+    // public boolean authenticate(String username, String password) {
+    //     logger.info("Authenticating user {} with password {}", username, password);
+    //     return ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password);
+    // }
 
     public TodoService(TodoRepository repository) {
         this.repository = repository;
